@@ -1,1 +1,2 @@
-An adaboost implementetion in Python
+An adaboost implementation in Python.
+

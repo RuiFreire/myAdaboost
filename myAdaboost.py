@@ -8,6 +8,7 @@ from sklearn.utils import check_X_y
 from sklearn.preprocessing import MinMaxScaler
 import copy
 import numpy as np
+import pandas as pd
 import sys
 
 class myAdaboost(BaseEstimator, ClassifierMixin):  
@@ -50,10 +51,12 @@ class myAdaboost(BaseEstimator, ClassifierMixin):
         # calling a method to ensure that "y is a pandas Series or an 1d numpy array with numeric binary values: (0,1)"
         self.check_y(y)
         
-        X_, y_ = check_X_y(X, y)
-        y_[ y_==0 ] = -1
+        y = y.copy(deep=True)
         
-        weights = np.array( [1/len(y_)]*len(y_) )
+        X, y = check_X_y(X, y)
+        y[ y == 0 ] = -1
+        
+        weights = np.array( [1/len(y)]*len(y) )
         
         np.random.seed(seed=123)
         
@@ -61,12 +64,12 @@ class myAdaboost(BaseEstimator, ClassifierMixin):
             
             dic = {}
                   
-            train_set_index = np.random.choice(a=len(y_), size=len(y_), p=weights, replace=True)
+            train_set_index = np.random.choice(a=len(y), size=len(y), p=weights, replace=True)
                  
-            self.classifier.fit( X_[train_set_index], y_[train_set_index] )
-            new_predictions = self.classifier.predict( X_ )
+            self.classifier.fit( X[train_set_index], y[train_set_index] )
+            new_predictions = self.classifier.predict( X )
             
-            new_error = sum( weights*( new_predictions != y_ ) )
+            new_error = sum( weights*( new_predictions != y ) )
         
             new_cl = copy.deepcopy( self.classifier )
             
@@ -77,7 +80,7 @@ class myAdaboost(BaseEstimator, ClassifierMixin):
             dic["weak_learner"] = new_cl
             dic["alpha"] = alpha
         
-            preNormWeights = weights * np.exp( -1*dic["alpha"]*(y_*new_predictions) )
+            preNormWeights = weights * np.exp( -1*dic["alpha"]*(y*new_predictions) )
         
             weights = preNormWeights/preNormWeights.sum()
             weights = np.array(weights)
